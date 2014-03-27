@@ -78,6 +78,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim._six import iteritems, itervalues, string_types
 from gensim._six.moves import xrange
 
+MAX_SENTENCE_LEN = 1000
 
 try:
     # try to compile and use the faster cython version
@@ -341,6 +342,10 @@ class Word2Vec(utils.SaveLoad):
         if self.negative:
             # build the table for drawing random words (for negative sampling)
             self.make_table()
+            if self.sg:
+                self.random_numbers = zeros((MAX_SENTENCE_LEN * 2 * self.window * self.negative), dtype=int)
+            else:
+                self.random_numbers = zeros((MAX_SENTENCE_LEN * self.negative), dtype=int)
         self.reset_weights()
 
 
