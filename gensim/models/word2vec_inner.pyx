@@ -142,6 +142,7 @@ cdef void fast_sentence2_sg_hs(
     for a in range(size):
         syn0[row1 + a] += work[a]
 
+
 cdef unsigned long long fast_sentence0_sg_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
@@ -151,16 +152,13 @@ cdef unsigned long long fast_sentence0_sg_neg(
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 2**48 - 1
-    cdef REAL_t f, g
-    cdef int d
-
+    cdef REAL_t f, g, label
     cdef np.uint32_t target_index
-    cdef REAL_t label
+    cdef int d
 
     memset(work, 0, size * cython.sizeof(REAL_t))
 
     for d in range(negative+1):
-
         if d == 0:
             target_index = word_index
             label = ONEF
@@ -196,11 +194,9 @@ cdef unsigned long long fast_sentence1_sg_neg(
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 2**48 - 1
-    cdef REAL_t f, g
-    cdef int d
-
+    cdef REAL_t f, g, label
     cdef np.uint32_t target_index
-    cdef REAL_t label
+    cdef int d
 
     memset(work, 0, size * cython.sizeof(REAL_t))
 
@@ -241,11 +237,9 @@ cdef unsigned long long fast_sentence2_sg_neg(
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 2**48 - 1
-    cdef REAL_t f, g
-    cdef int d
-
+    cdef REAL_t f, g, label
     cdef np.uint32_t target_index
-    cdef REAL_t label
+    cdef int d
 
     for a in range(size):
         work[a] = <REAL_t>0.0
@@ -421,12 +415,10 @@ cdef unsigned long long fast_sentence0_cbow_neg(
     cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 2**48 - 1
-    cdef REAL_t f, g, count, inv_count
-    cdef int m, d
+    cdef REAL_t f, g, count, inv_count, label
+    cdef np.uint32_t target_index, word_index
+    cdef int d, m
 
-    cdef np.uint32_t target_index
-    cdef REAL_t label
-    cdef np.uint32_t word_index
     word_index = indexes[i]
 
     memset(neu1, 0, size * cython.sizeof(REAL_t))
@@ -442,8 +434,8 @@ cdef unsigned long long fast_sentence0_cbow_neg(
         sscal(&size, &inv_count, neu1, &ONE)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
+    
     for d in range(negative+1):
-
         if d == 0:
             target_index = word_index
             label = ONEF
@@ -483,12 +475,9 @@ cdef unsigned long long fast_sentence1_cbow_neg(
     cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 2**48 - 1
-    cdef REAL_t f, g, count, inv_count
-    cdef int m, d
-
-    cdef np.uint32_t target_index
-    cdef REAL_t label
-    cdef np.uint32_t word_index
+    cdef REAL_t f, g, count, inv_count, label
+    cdef np.uint32_t target_index, word_index
+    cdef int d, m
 
     word_index = indexes[i]
 
@@ -505,8 +494,8 @@ cdef unsigned long long fast_sentence1_cbow_neg(
         sscal(&size, &inv_count, neu1, &ONE)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
+	
     for d in range(negative+1):
-
         if d == 0:
             target_index = word_index
             label = ONEF
@@ -546,12 +535,10 @@ cdef unsigned long long fast_sentence2_cbow_neg(
     cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 2**48 - 1
-    cdef REAL_t f, g, count, inv_count
-    cdef int m, d
+    cdef REAL_t f, g, count, inv_count, label
+    cdef np.uint32_t target_index, word_index
+    cdef int d, m
 
-    cdef np.uint32_t target_index
-    cdef REAL_t label
-    cdef np.uint32_t word_index
     word_index = indexes[i]
 
     for a in range(size):
@@ -570,8 +557,8 @@ cdef unsigned long long fast_sentence2_cbow_neg(
 
     for a in range(size):
         work[a] = <REAL_t>0.0
-    for d in range(negative+1):
 
+    for d in range(negative+1):
         if d == 0:
             target_index = word_index
             label = ONEF
@@ -613,7 +600,6 @@ def train_sentence_sg(model, sentence, alpha, _work):
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *work
-    cdef np.uint32_t word2_index
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
 
@@ -623,25 +609,27 @@ def train_sentence_sg(model, sentence, alpha, _work):
     cdef int sentence_len
     cdef int window = model.window
 
-    cdef int i, j, k, m
+    cdef int i, j, k
     cdef long result = 0
 
+    # For hierarchical softmax
     cdef REAL_t *syn1
     cdef np.uint32_t *points[MAX_SENTENCE_LEN]
     cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
 
+    # For negative sampling
     cdef REAL_t *syn1neg
     cdef np.uint32_t *table
-    cdef unsigned long long table_len, next_random
-    cdef np.uint32_t word_index
+    cdef unsigned long long table_len
+    cdef unsigned long long next_random
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table_len = len(model.table)
         table = <np.uint32_t *>(np.PyArray_DATA(model.table))
+        table_len = len(model.table)
         next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
@@ -653,7 +641,6 @@ def train_sentence_sg(model, sentence, alpha, _work):
         if word is None:
             codelens[i] = 0
         else:
-            result += 1
             indexes[i] = word.index
             reduced_windows[i] = np.random.randint(window)
             if hs:
@@ -662,6 +649,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
                 points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
             else:
                 codelens[i] = 1
+            result += 1
 
     # release GIL & train on the sentence
     with nogil:
@@ -692,7 +680,6 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *work
     cdef REAL_t *neu1
-    cdef np.uint32_t word2_index
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
 
@@ -705,28 +692,31 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     cdef int i, j, k
     cdef long result = 0
 
+    # For hierarchical softmax
     cdef REAL_t *syn1
     cdef np.uint32_t *points[MAX_SENTENCE_LEN]
     cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
 
+    # For negative sampling
     cdef REAL_t *syn1neg
     cdef np.uint32_t *table
-    cdef unsigned long long table_len, next_random
-    cdef np.uint32_t word_index
+    cdef unsigned long long table_len
+    cdef unsigned long long next_random
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table_len = len(model.table)
         table = <np.uint32_t *>(np.PyArray_DATA(model.table))
+        table_len = len(model.table)
         next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
     sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
+
     for i in range(sentence_len):
         word = sentence[i]
         if word is None:
