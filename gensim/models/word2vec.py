@@ -78,7 +78,6 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim._six import iteritems, itervalues, string_types
 from gensim._six.moves import xrange
 
-MAX_SENTENCE_LEN = 1000
 
 try:
     # try to compile and use the faster cython version
