@@ -164,10 +164,10 @@ cdef unsigned long long fast_sentence0_sg_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
@@ -207,10 +207,10 @@ cdef unsigned long long fast_sentence1_sg_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>sdot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
@@ -251,10 +251,10 @@ cdef unsigned long long fast_sentence2_sg_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>0.0
@@ -434,17 +434,17 @@ cdef unsigned long long fast_sentence0_cbow_neg(
         sscal(&size, &inv_count, neu1, &ONE)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
-    
+
     for d in range(negative+1):
         if d == 0:
             target_index = word_index
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>dsdot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
@@ -469,7 +469,7 @@ cdef unsigned long long fast_sentence0_cbow_neg(
 cdef unsigned long long fast_sentence1_cbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
-    np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work, 
+    np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, unsigned long long next_random) nogil:
 
     cdef long long a
@@ -494,17 +494,17 @@ cdef unsigned long long fast_sentence1_cbow_neg(
         sscal(&size, &inv_count, neu1, &ONE)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
-	
+
     for d in range(negative+1):
         if d == 0:
             target_index = word_index
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>sdot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
@@ -564,10 +564,10 @@ cdef unsigned long long fast_sentence2_cbow_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>0.0
