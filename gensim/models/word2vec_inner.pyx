@@ -171,13 +171,10 @@ cdef unsigned long long fast_sentence0_sg_neg(
 
         row2 = target_index * size
         f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
-        if f > MAX_EXP:
-            g = (label - ONEF) * alpha
-        elif f < MAX_EXP:
-            g = (label - <REAL_t>0.0) * alpha
-        else:
-            f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            g = (label - f) * alpha
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (label - f) * alpha
         saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
 
@@ -214,13 +211,10 @@ cdef unsigned long long fast_sentence1_sg_neg(
 
         row2 = target_index * size
         f = <REAL_t>sdot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
-        if f > MAX_EXP:
-            g = (label - ONEF) * alpha
-        elif f < MAX_EXP:
-            g = (label - <REAL_t>0.0) * alpha
-        else:
-            f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            g = (label - f) * alpha
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (label - f) * alpha
         saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
 
@@ -260,13 +254,9 @@ cdef unsigned long long fast_sentence2_sg_neg(
         f = <REAL_t>0.0
         for a in range(size):
             f += syn0[row1 + a] * syn1neg[row2 + a]
-        if f > MAX_EXP:
-            g = (label - ONEF) * alpha
-        elif f < MAX_EXP:
-            g = (label - <REAL_t>0.0) * alpha
-        else:
-            f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            g = (label - f) * alpha
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
         for a in range(size):
             work[a] += g * syn1neg[row2 + a]
@@ -448,13 +438,10 @@ cdef unsigned long long fast_sentence0_cbow_neg(
 
         row2 = target_index * size
         f = <REAL_t>dsdot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
-        if f > MAX_EXP:
-            g = (label - ONEF) * alpha
-        elif f < MAX_EXP:
-            g = (label - <REAL_t>0.0) * alpha
-        else:
-            f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            g = (label - f) * alpha
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (label - f) * alpha
         saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
 
@@ -508,13 +495,10 @@ cdef unsigned long long fast_sentence1_cbow_neg(
 
         row2 = target_index * size
         f = <REAL_t>sdot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
-        if f > MAX_EXP:
-            g = (label - ONEF) * alpha
-        elif f < MAX_EXP:
-            g = (label - <REAL_t>0.0) * alpha
-        else:
-            f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            g = (label - f) * alpha
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (label - f) * alpha
         saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
 
@@ -573,13 +557,10 @@ cdef unsigned long long fast_sentence2_cbow_neg(
         f = <REAL_t>0.0
         for a in range(size):
             f += neu1[a] * syn1neg[row2 + a]
-        if f > MAX_EXP:
-            g = (label - ONEF) * alpha
-        elif f < MAX_EXP:
-            g = (label - <REAL_t>0.0) * alpha
-        else:
-            f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            g = (label - f) * alpha
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (label - f) * alpha
         for a in range(size):
             work[a] += g * syn1neg[row2 + a]
         for a in range(size):
