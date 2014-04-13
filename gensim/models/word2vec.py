@@ -129,13 +129,13 @@ except:
                         # 2d matrix, k+1 x layer1_size
                         l2b = deepcopy(model.syn1neg[word_indices])
                         # propagate hidden -> output
-                        fb = 1. / (1. + exp(-dot(l1, l2b.T))) 
+                        fb = 1. / (1. + exp(-dot(l1, l2b.T)))
                         # vector of error gradients multiplied by the learning rate
                         gb = (labels - fb) * alpha
                         # learn hidden -> output
                         model.syn1neg[word_indices] += outer(gb, l1)
-                        # learn input -> hidden 
-                        neu1e += dot(gb, l2b) 
+                        # learn input -> hidden
+                        neu1e += dot(gb, l2b)
                     model.syn0[word2.index] += neu1e  # learn input -> hidden
 
         return len([word for word in sentence if word is not None])
@@ -225,7 +225,7 @@ class Word2Vec(utils.SaveLoad):
         `min_count` = ignore all words with total frequency lower than this.
         `workers` = use this many worker threads to train the model (=faster training with multicore machines)
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0)
-        `negative` = if > 0, negative sampling will be used, the int for negative 
+        `negative` = if > 0, negative sampling will be used, the int for negative
                 specifies how many "noise words" should be drawn (usually between 5-20)
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -250,7 +250,7 @@ class Word2Vec(utils.SaveLoad):
     def make_table(self, table_size=100000000., power=0.75):
         """
         Create a table using stored vocabulary word counts for drawing random words in the negative
-        sampling training routines. 
+        sampling training routines.
         Called internally from `build_vocab()`.
 
         """
