@@ -229,7 +229,10 @@ class TestWord2VecModel(unittest.TestCase):
     def models_equal(self, model, model2):
         self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
-        self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
+        if model.hs:
+            self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
+        if model.negative:
+            self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg))
         most_common_word = max(model.vocab.iteritems(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
