@@ -69,7 +69,7 @@ except ImportError:
     from Queue import Queue
 
 from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray, empty
+    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray, empty, sum as np_sum
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -148,36 +148,42 @@ except:
         word is not in the vocabulary. Called internally from `Word2Vec.train()`.
 
         """
+        if model.negative:
+            # precompute negative labels
+            labels = zeros(model.negative+1)
+            labels[0] = 1.
 
         for pos, word in enumerate(sentence):
             if word is None:
                 continue  # OOV word in the input sentence => skip
-            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
-
-            # Combine all context words into an appropriate input
+            reduced_window = random.randint(model.window) # `b` in the original word2vec code
             start = max(0, pos - model.window + reduced_window)
-            l1 = matutils.zeros_aligned((model.layer1_size), dtype=REAL)
-            count = 0
-            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
-                if pos2 == pos or word2 is None:
-                    pass
-                else:
-                    count += 1
-                    l1 += model.syn0[word2.index]
+            word2_indices = [word2.index for pos2, word2 in enumerate(sentence[start:pos+model.window+1-reduced_window], start) if (word2 and not (pos2 == pos))]
+            l1 = np_sum(model.syn0[word2_indices],axis=0) # 1xlayer1_size
+            if len(word2_indices) > 0:
+                l1 /= len(word2_indices)
 
-            if count > 0:
-                l1 = l1 / count
+            if model.hs:
+                l2a = deepcopy(model.syn1[word.point]) #2d matrix, codelen x layer1_size
+                fa = 1. / (1. + np.exp(-np.dot(l1, l2a.T))) # propagate hidden -> output
+                ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
+                model.syn1[word.point] += np.outer(ga, l1) # learn hidden -> output
+                neu1e += np.dot(ga, l2a) # learn input -> hidden, here for all words in the window separately
 
-            l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-            fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
-            ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+            if model.negative:
+                # use this word (label = 1) + k other random words not from this sentence (label = 0)
+                word_indices = [word.index]
+                while len(word_indices) < model.negative+1:
+                    w = model.table[random.randint(model.table.shape[0])]
+                    if not w == word.index:
+                        word_indices.append(w)
+                l2b = deepcopy(model.syn1neg[word_indices]) # 2d matrix, k+1 x layer1_size
+                fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
+                gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
+                model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
+                neu1e += dot(gb, l2b) # learn input -> hidden, here for all words in the window separately
 
-            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
-                if pos2 == pos or word2 is None:
-                    pass
-                else:
-                    model.syn0[word2.index] += dot(ga, l2a)
+            model.syn0[word2_indices] += neu1e
 
         return len([word for word in sentence if word is not None])
 
