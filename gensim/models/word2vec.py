@@ -79,7 +79,7 @@ try:
 except ImportError:
     from Queue import Queue
 
-from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
+from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod
 
@@ -92,7 +92,9 @@ from six.moves import xrange
 
 
 try:
-    from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+    import pyximport
+    pyximport.install(setup_args={"include_dirs": get_include()})
+    from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
