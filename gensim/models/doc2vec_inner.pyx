@@ -14,8 +14,7 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.string cimport memset
 
-cdef extern from "voidptr.h":
-    void* PyCObject_AsVoidPtr(object obj)
+from cpython cimport PyCObject_AsVoidPtr
 
 from scipy.linalg.blas import fblas
 
